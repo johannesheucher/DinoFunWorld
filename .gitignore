@@ -17,6 +17,15 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
+# Class files
+*.class
+
+# Asses folder
+assets
+
+# Settings folder
+.settings
+
 # =========================
 # Operating System Files
 # =========================

@@ -1,14 +1,14 @@
 package components;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 public class VisitorPathPoint {
-	private final LocalDate date;
+	private final LocalDateTime date;
 	private final GridCell cell;
 	private final String activity;
 	
 	
-	public LocalDate getDate() {
+	public LocalDateTime getDate() {
 		return date;
 	}
 	
@@ -23,7 +23,7 @@ public class VisitorPathPoint {
 	}
 	
 	
-	public VisitorPathPoint(LocalDate date, GridCell cell, String activity) {
+	public VisitorPathPoint(LocalDateTime date, GridCell cell, String activity) {
 		this.date = date;
 		this.cell = cell;
 		this.activity = activity;

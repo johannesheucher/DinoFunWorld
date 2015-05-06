@@ -3,17 +3,12 @@ package components;
 import java.awt.Point;
 
 public class GridCell {
-	private Point position;
+	private final Point position;
 	private Attraction attraction;
 	
 	
 	public Point getPosition() {
 		return position;
-	}
-	
-	
-	public void setPosition(Point position) {
-		this.position = position;
 	}
 	
 	
@@ -27,7 +22,7 @@ public class GridCell {
 	}
 	
 	
-	public GridCell() {
-		
+	public GridCell(Point position) {
+		this.position = position;
 	}
 }

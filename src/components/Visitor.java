@@ -1,12 +1,13 @@
 package components;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 
 public class Visitor {
 	private String id;
 	private VisitorPath path;
 	private Group group;
+	private Park park;
 	
 	
 	public String getId() {
@@ -29,6 +30,16 @@ public class Visitor {
 	}
 	
 	
+	public Park getPark() {
+		return park;
+	}
+	
+	
+	public void setPark(Park park) {
+		this.park = park;
+	}
+	
+	
 	public Visitor(String id) {
 		this.id = id;
 		path = new VisitorPath();
@@ -36,7 +47,12 @@ public class Visitor {
 	}
 	
 	
-	public void addPathPoint(LocalDate date, GridCell cell, String activity) {
+	public void addPathPoint(LocalDateTime date, GridCell cell, String activity) {
 		path.addPathPoint(new VisitorPathPoint(date, cell, activity));
+	}
+	
+	
+	public String toPathPattern() {
+		return id + "," + path.toPathPattern();
 	}
 }
