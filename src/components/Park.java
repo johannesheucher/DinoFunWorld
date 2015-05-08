@@ -10,11 +10,6 @@ import java.util.Map;
 
 public class Park {
 	private GridCell[][] cells;
-	
-	/**
-	 * Occupied cells over all visitors
-	 */
-	private boolean[][] occupied;
 	private Map<String, Visitor> visitors;
 	
 	
@@ -33,11 +28,6 @@ public class Park {
 	}
 	
 	
-	public boolean isOccupied(int x, int y) {
-		return occupied[x][y];
-	}
-	
-	
 	public Park() {
 		cells = new GridCell[100][100];
 		for (int x = 0; x < 100; x++) {
@@ -45,8 +35,6 @@ public class Park {
 				cells[x][y] = new GridCell(new Point(x, y));
 			}
 		}
-		occupied = new boolean[100][100];
-		
 		visitors = new HashMap<>(8000);
 	}
 	
@@ -66,7 +54,6 @@ public class Park {
 		}
 		
 		visitor.addPathPoint(date, cells[position.x][position.y], activity);
-		occupied[position.x][position.y] = true;
 	}
 	
 	

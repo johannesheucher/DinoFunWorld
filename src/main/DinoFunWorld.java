@@ -13,6 +13,8 @@ import java.util.Locale;
 
 import components.Park;
 import components.Visitor;
+import components.VisitorPath;
+import components.VisitorPathPoint;
 
 public class DinoFunWorld {
 	
@@ -71,10 +73,21 @@ public class DinoFunWorld {
 		}
 		
 		
+		// print invalid points
+		System.out.println("Invalid points - date:");
+		for (VisitorPathPoint invalidPoint : VisitorPath.unsolvedInvalidDates) {
+			System.out.println(invalidPoint.toString());
+		}
+		System.out.println("Invalid points - position:");
+		for (VisitorPathPoint invalidPoint : VisitorPath.criticalInvalidPositions) {
+			System.out.println(invalidPoint.toString());
+		}
+		
+		
 		// export path patterns
 		BufferedWriter bw = null;
 		try {
-			bw = new BufferedWriter(new FileWriter("assets\\path_patterns.csv"));
+			bw = new BufferedWriter(new FileWriter("assets\\path_patterns" + path.substring(path.length() - 7, path.length() - 4) + ".csv"));
 			int numWrittenLines = 0;
 			for (Visitor visitor : park.getVisitors().values()) {
 				String line = visitor.toPathPattern();

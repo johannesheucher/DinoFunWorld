@@ -27,5 +27,12 @@ public class VisitorPathPoint {
 		this.date = date;
 		this.cell = cell;
 		this.activity = activity;
+		cell.setEverOccupied(true);
+	}
+	
+	
+	@Override
+	public String toString() {
+		return String.format("PathPoint at %s\t\t(%d, %d)", getDate().toLocalTime().toString(), getCell().getPosition().x, getCell().getPosition().y);
 	}
 }
