@@ -48,7 +48,7 @@ public class Visitor {
 	
 	
 	public void addPathPoint(LocalDateTime date, GridCell cell, String activity) {
-		path.addPathPoint(new VisitorPathPoint(date, cell, activity));
+		path.addPathPoint(date, cell, activity);
 	}
 	
 	

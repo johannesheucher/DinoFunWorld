@@ -18,33 +18,36 @@ public class VisitorPath {
 	}
 	
 	
-	public void addPathPoint(VisitorPathPoint pathPoint) {
+	public void addPathPoint(LocalDateTime date, GridCell cell, String activity) {
+		VisitorPathPoint currentPoint = new VisitorPathPoint(date, cell, this, activity);
+		
 		// validate path
 		if (pathPoints.size() > 0) {
 			VisitorPathPoint previousPoint = pathPoints.get(pathPoints.size() - 1);
-			if (previousPoint.getDate().isAfter(pathPoint.getDate())) {
-				System.out.printf(">> Error: Invalid date at point: %s\n", pathPoint.toString());
-				unsolvedInvalidDates.add(pathPoint);
+			if (previousPoint.getDate().isAfter(currentPoint.getDate())) {
+				System.out.printf(">> Error: Invalid date at point: %s\n", currentPoint.toString());
+				unsolvedInvalidDates.add(currentPoint);
 			}
-			int errX = previousPoint.getCell().getPosition().x - pathPoint.getCell().getPosition().x;
-			int errY = previousPoint.getCell().getPosition().y - pathPoint.getCell().getPosition().y;
+			int errX = previousPoint.getCell().getPosition().x - currentPoint.getCell().getPosition().x;
+			int errY = previousPoint.getCell().getPosition().y - currentPoint.getCell().getPosition().y;
+			long errSeconds = ChronoUnit.SECONDS.between(previousPoint.getDate(), currentPoint.getDate());
 			if ((Math.abs(errX) > 1 || Math.abs(errY) > 1) && previousPoint.getActivity().equals("movement")) {
 				
-				if (Math.abs(errX) > 2 || Math.abs(errY) > 2) {
-					criticalInvalidPositions.add(pathPoint);
+				if (Math.abs(errX) > 3 || Math.abs(errY) > 3 || errSeconds > 60) {
+					criticalInvalidPositions.add(previousPoint);
+					criticalInvalidPositions.add(currentPoint);
+				} else {
+					// fix path (only when visitor was moving)
+					Point offset = new Point(errX < 0? -1 : errX > 0? 1 : 0, errY < 0? -1 : errY > 0? 1 : 0);
+					int newX = currentPoint.getCell().getPosition().x + offset.x;
+					int newY = currentPoint.getCell().getPosition().y + offset.y;
+					LocalDateTime newDate = currentPoint.getDate().minusSeconds((long)(errSeconds / Math.sqrt(errX*errX + errY*errY)));
+					addPathPoint(newDate, visitor.getPark().getCells()[newX][newY], currentPoint.getActivity());
+					System.out.printf("\t\tVisitor %s: Fixed mov from %s\tto\t%s\twith\t%s\t(%d, %d)\n", visitor.getId(), previousPoint, currentPoint, newDate.toLocalTime().toString(), newX, newY);
 				}
-				// fix path (only when visitor was moving)
-				Point offset = new Point(errX < 0? -1 : errX > 0? 1 : 0, errY < 0? -1 : errY > 0? 1 : 0);
-				int newX = pathPoint.getCell().getPosition().x + offset.x;
-				int newY = pathPoint.getCell().getPosition().y + offset.y;
-				long errSeconds = ChronoUnit.SECONDS.between(previousPoint.getDate(), pathPoint.getDate());
-				LocalDateTime newDate = pathPoint.getDate().minusSeconds((long)(errSeconds / Math.sqrt(errX*errX + errY*errY)));
-				VisitorPathPoint newPoint = new VisitorPathPoint(newDate, visitor.getPark().getCells()[newX][newY], pathPoint.getActivity());
-				addPathPoint(newPoint);
-				System.out.printf("\t\tVisitor %s: Fixed point %s\twith\t%s\n", visitor.getId(), pathPoint, newPoint);
 			}
 		}
-		pathPoints.add(pathPoint);
+		pathPoints.add(currentPoint);
 	}
 	
 	

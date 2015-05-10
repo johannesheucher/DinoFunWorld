@@ -1,15 +1,23 @@
 package main;
 
+import java.awt.Color;
+import java.awt.Graphics2D;
 import java.awt.Point;
+import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.Locale;
+
+import javax.imageio.ImageIO;
 
 import components.Park;
 import components.Visitor;
@@ -73,21 +81,74 @@ public class DinoFunWorld {
 		}
 		
 		
+		// export image of pattern
+		exportPathImage(park.getVisitors().get("1621849"));
+		exportPathImage(park.getVisitors().get("1288884"));
+		exportPathImage(park.getVisitors().get("594316"));
+		
+		exportPathImage(park.getVisitors().get("241972"));
+		exportPathImage(park.getVisitors().get("710414"));
+		
+		exportPathImage(park.getVisitors().get("443367"));
+		exportPathImage(park.getVisitors().get("1755554"));
+		
+		
 		// print invalid points
 		System.out.println("Invalid points - date:");
 		for (VisitorPathPoint invalidPoint : VisitorPath.unsolvedInvalidDates) {
 			System.out.println(invalidPoint.toString());
 		}
 		System.out.println("Invalid points - position:");
-		for (VisitorPathPoint invalidPoint : VisitorPath.criticalInvalidPositions) {
-			System.out.println(invalidPoint.toString());
+		for (int i = 0; i < VisitorPath.criticalInvalidPositions.size();) {
+			VisitorPathPoint invalidPointFrom = VisitorPath.criticalInvalidPositions.get(i++);
+			VisitorPathPoint invalidPointTo = VisitorPath.criticalInvalidPositions.get(i++);
+			
+			System.out.printf("Invalid movement of %s from %s\t\tto\t\t%s\n", invalidPointFrom.getPath().getVisitor().getId(), invalidPointFrom.toString(), invalidPointTo.toString());
 		}
 		
 		
 		// export path patterns
+//		exportPathPatterns(park, "assets\\path_patterns" + path.substring(path.length() - 7, path.length() - 4) + ".csv");
+	}
+	
+	
+	private static void exportPathImage(Visitor visitor) {
+		final int WIDTH = 100;
+		final int HEIGHT = 100;
+		BufferedImage image = new BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_RGB);
+		Graphics2D graphics = image.createGraphics();
+		graphics.setPaint(new Color(255, 255, 255));
+		graphics.fillRect (0, 0, image.getWidth(), image.getHeight());
+		
+		final LocalDateTime REFERENCE_DATE = LocalDateTime.of(2014, 6, 6, 8, 0, 0, 0);
+		final long DAY_SECONDS = (22 - 8) * 60 * 60;
+		for (VisitorPathPoint point : visitor.getPath().getPathPoints()) {
+			long errSeconds = ChronoUnit.SECONDS.between(REFERENCE_DATE, point.getDate());
+			float intensity = (float)errSeconds / DAY_SECONDS;
+			int r = 0;
+			int g = 0;
+			int b = 0;
+			if (intensity < 0.33) {
+				r = (int)(intensity * 600);
+			} else if (intensity < 0.66) {
+				g = (int)((intensity - 0.33) * 600);
+			} else {
+				b = (int)((intensity - 0.66) * 600);
+			}
+			image.setRGB(point.getCell().getPosition().x, point.getCell().getPosition().y, (r << 16) + (g << 8) + b);
+		}
+		try {
+			ImageIO.write(image, "PNG", new File("assets\\path_" + visitor.getId() + ".png"));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	
+	private static void exportPathPatterns(Park park, String path) {
 		BufferedWriter bw = null;
 		try {
-			bw = new BufferedWriter(new FileWriter("assets\\path_patterns" + path.substring(path.length() - 7, path.length() - 4) + ".csv"));
+			bw = new BufferedWriter(new FileWriter(path));
 			int numWrittenLines = 0;
 			for (Visitor visitor : park.getVisitors().values()) {
 				String line = visitor.toPathPattern();
