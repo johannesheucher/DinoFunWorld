@@ -1,10 +1,13 @@
 package components;
 
+import java.awt.Point;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 
 
 public class Visitor {
-	private String id;
+	private final String id;
 	private VisitorPath path;
 	private Group group;
 	private Park park;
@@ -27,6 +30,9 @@ public class Visitor {
 	
 	public void setGroup(Group group) {
 		this.group = group;
+		if (!group.getMembers().contains(this)) {
+			group.addMember(this);
+		}
 	}
 	
 	
@@ -54,5 +60,16 @@ public class Visitor {
 	
 	public String toPathPattern() {
 		return id + "," + path.toPathPattern();
+	}
+	
+	
+	public String toCSV() {
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-M-dd HH:mm:ss", Locale.US);
+		String result = "";
+		for (VisitorPathPoint point : getPath().getPathPoints()) {
+			Point position = point.getCell().getPosition();
+			result += point.getDate().format(formatter) + "," + getId() + "," + point.getActivity() + "," + position.x + "," + position.y + "," + getGroup().getId() + "\n";
+		}
+		return result;
 	}
 }

@@ -11,6 +11,7 @@ import java.util.Map;
 public class Park {
 	private GridCell[][] cells;
 	private Map<String, Visitor> visitors;
+	private Map<String, Group> groups;
 	
 	
 	public GridCell[][] getCells() {
@@ -28,6 +29,11 @@ public class Park {
 	}
 	
 	
+	public Map<String, Group> getGroups() {
+		return groups;
+	}
+	
+	
 	public Park() {
 		cells = new GridCell[100][100];
 		for (int x = 0; x < 100; x++) {
@@ -36,6 +42,7 @@ public class Park {
 			}
 		}
 		visitors = new HashMap<>(8000);
+		groups = new HashMap<>(5000);
 	}
 	
 	
@@ -54,6 +61,11 @@ public class Park {
 		}
 		
 		visitor.addPathPoint(date, cells[position.x][position.y], activity);
+	}
+	
+	
+	public void addGroup(Group group) {
+		groups.put(group.getId(), group);
 	}
 	
 	

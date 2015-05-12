@@ -12,19 +12,21 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Locale;
 
 import javax.imageio.ImageIO;
 
+import components.Group;
 import components.Park;
 import components.Visitor;
 import components.VisitorPath;
 import components.VisitorPathPoint;
 
 public class DinoFunWorld {
+	
+	private Park park;
 	
 	public static long numLines(FileReader reader) {
 		BufferedReader br = new BufferedReader(reader);
@@ -38,13 +40,54 @@ public class DinoFunWorld {
 	}
 	
 	public static void main(String[] args) {
-		String path = args[0];
+		String visitorPath = args[0];
+		String groupPath = args[1];
 		
-		BufferedReader br = null;
-		String cvsSplitBy = ",";
 		
 		Park park = new Park();
 		
+		importVisitors(visitorPath, park);
+		importGroups(groupPath, park);
+		
+		// export repaired and complete visitors
+		String visitorExportPath = visitorPath.substring(0, visitorPath.length() - 4) + "_repaired.csv";
+		exportVisitors(visitorExportPath, park);
+		
+		
+		// export image of pattern
+//		exportPathImage(park.getVisitors().get("1621849"));
+//		exportPathImage(park.getVisitors().get("1288884"));
+//		exportPathImage(park.getVisitors().get("594316"));
+//		
+//		exportPathImage(park.getVisitors().get("241972"));
+//		exportPathImage(park.getVisitors().get("710414"));
+//		
+//		exportPathImage(park.getVisitors().get("443367"));
+//		exportPathImage(park.getVisitors().get("1755554"));
+//		
+//		
+//		// print invalid points
+//		System.out.println("Invalid points - date:");
+//		for (VisitorPathPoint invalidPoint : VisitorPath.unsolvedInvalidDates) {
+//			System.out.println(invalidPoint.toString());
+//		}
+//		System.out.println("Invalid points - position:");
+//		for (int i = 0; i < VisitorPath.criticalInvalidPositions.size();) {
+//			VisitorPathPoint invalidPointFrom = VisitorPath.criticalInvalidPositions.get(i++);
+//			VisitorPathPoint invalidPointTo = VisitorPath.criticalInvalidPositions.get(i++);
+//			
+//			System.out.printf("Invalid movement of %s from %s\t\tto\t\t%s\n", invalidPointFrom.getPath().getVisitor().getId(), invalidPointFrom.toString(), invalidPointTo.toString());
+//		}
+		
+		
+		// export path patterns
+//		exportPathPatterns("assets\\path_patterns" + path.substring(path.length() - 7, path.length() - 4) + ".csv", park);
+	}
+	
+	
+	private static void importVisitors(String path, Park park) {
+		BufferedReader br = null;
+		String cvsSplitBy = ",";
 		
 		try {
 			final long NUM_DATA_POINTS = numLines(new FileReader(path));
@@ -79,36 +122,83 @@ public class DinoFunWorld {
 				}
 			}
 		}
+	}
+	
+	
+	private static void importGroups(String path, Park park) {
+		BufferedReader br = null;
+		String cvsSplitBy = ",";
 		
-		
-		// export image of pattern
-		exportPathImage(park.getVisitors().get("1621849"));
-		exportPathImage(park.getVisitors().get("1288884"));
-		exportPathImage(park.getVisitors().get("594316"));
-		
-		exportPathImage(park.getVisitors().get("241972"));
-		exportPathImage(park.getVisitors().get("710414"));
-		
-		exportPathImage(park.getVisitors().get("443367"));
-		exportPathImage(park.getVisitors().get("1755554"));
-		
-		
-		// print invalid points
-		System.out.println("Invalid points - date:");
-		for (VisitorPathPoint invalidPoint : VisitorPath.unsolvedInvalidDates) {
-			System.out.println(invalidPoint.toString());
+		try {
+			final long NUM_DATA_POINTS = numLines(new FileReader(path));
+			int numParsedLines = 0;
+			br = new BufferedReader(new FileReader(path));
+			br.readLine();
+			String line = "";
+			while ((line = br.readLine()) != null) {
+				String[] column = line.split(cvsSplitBy);
+				try {
+					String visitorId = column[0].substring(1, column[0].length() - 1);
+					Visitor visitor = park.getVisitors().get(visitorId);
+					String groupId = column[column.length - 1].substring(1, column[column.length - 1].length() - 1);
+					Group group = park.getGroups().get(groupId);
+					if (group == null) {
+						group = new Group(groupId);
+						park.addGroup(group);
+					}
+					group.addMember(visitor);
+				} catch (Exception e) {
+					System.out.printf(">> Error: Invalid line: %s\n", line);
+				}
+				
+				if (numParsedLines % (10e4) == 0) {
+					System.out.printf("Parsed %.2f%%\t\tGroups: %d\n", 100*numParsedLines / (float)NUM_DATA_POINTS, park.getGroups().size());
+				}
+				numParsedLines++;
+			}
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			if (br != null) {
+				try {
+					br.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
 		}
-		System.out.println("Invalid points - position:");
-		for (int i = 0; i < VisitorPath.criticalInvalidPositions.size();) {
-			VisitorPathPoint invalidPointFrom = VisitorPath.criticalInvalidPositions.get(i++);
-			VisitorPathPoint invalidPointTo = VisitorPath.criticalInvalidPositions.get(i++);
-			
-			System.out.printf("Invalid movement of %s from %s\t\tto\t\t%s\n", invalidPointFrom.getPath().getVisitor().getId(), invalidPointFrom.toString(), invalidPointTo.toString());
+	}
+	
+	
+	private static void exportVisitors(String path, Park park) {
+		BufferedWriter bw = null;
+		try {
+			bw = new BufferedWriter(new FileWriter(path));
+			int numWrittenLines = 0;
+			for (Visitor visitor : park.getVisitors().values()) {
+				String visitorCSV = visitor.toCSV();
+				bw.write(visitorCSV);
+				if (numWrittenLines % (100) == 0) {
+					System.out.printf("Wrote %.2f%%\n", 100*numWrittenLines / (float)park.getVisitors().size());
+				}
+				numWrittenLines++;
+//				if (numWrittenLines > 100) {
+//					break;
+//				}
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			if (bw != null) {
+				try {
+					bw.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
 		}
-		
-		
-		// export path patterns
-//		exportPathPatterns(park, "assets\\path_patterns" + path.substring(path.length() - 7, path.length() - 4) + ".csv");
 	}
 	
 	
@@ -145,7 +235,7 @@ public class DinoFunWorld {
 	}
 	
 	
-	private static void exportPathPatterns(Park park, String path) {
+	private static void exportPathPatterns(String path, Park park) {
 		BufferedWriter bw = null;
 		try {
 			bw = new BufferedWriter(new FileWriter(path));
